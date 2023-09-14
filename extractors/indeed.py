@@ -15,6 +15,7 @@ options.add_argument("--disable-dev-shm-usage")
 def extract_indeed_jobs(keyword):  # search jobs in one page
     pages = get_page_count(keyword)
     print(f"Found {pages} pages")
+    results = []
     for page in range(pages):
         # broswer = webdriver.Chrome(options=options)
         browser = webdriver.Chrome(
@@ -29,7 +30,6 @@ def extract_indeed_jobs(keyword):  # search jobs in one page
         job_list = soup.find("ul", class_="css-zu9cdh eu4oa1w0")
         # make soup find only depth-one 'li' s
         jobs = job_list.find_all("li", recursive=False)
-        results = []
         for job in jobs:
             zone = job.find("div", class_='mosaic-zone nonJobContent-desktop')
             if zone is None:
@@ -44,6 +44,12 @@ def extract_indeed_jobs(keyword):  # search jobs in one page
                     'location': location.string,
                     'position': title
                 }
+                print(job_data)
+                for _ in job_data:
+                    if job_data[_] != None:
+                        job_data[_] = job_data[_].replace(",", " ")
+                    else:
+                        job_data[_] = ""
                 results.append(job_data)
 
     return results
