@@ -1,23 +1,44 @@
-import time
-from requests import get
-from bs4 import BeautifulSoup
-from extractors.wwr import extract_wwr_jobs
+from flask import Flask, render_template, request, redirect, send_file
 from extractors.indeed import extract_indeed_jobs
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
+from extractors.wwr import extract_wwr_jobs
+from file import save_to_file
+app = Flask("JobScrapper")
 
 
-keyword = input("What do you want to search for? ")
-indeed = extract_indeed_jobs(keyword)
-wwr = extract_wwr_jobs(keyword)
-jobs = indeed + wwr
+@app.route("/")
+def home():
+    return render_template("home.html")
 
 
-# create file and save
-file = open(f"{keyword}.csv", "w")
+db = {}  # fake db for one-time use
+# spedd up the website
 
-file.write("Position, Company, Location, URL \n")
 
-for job in indeed:
-    file.write(
-        f"{job['position']}, {job['company']}, {job['location']}, {job['link']} \n")
+@app.route("/search")
+def search():
+    keyword = request.args.get("keyword")
+    if keyword == None or keyword.strip() == '':
+        return redirect("/")
+    if keyword in db:
+        jobs = db[keyword]
+    else:
+        indeed = extract_indeed_jobs(keyword=keyword)
+        wwr = extract_wwr_jobs(keyword=keyword)
+        jobs = indeed + wwr  # type: list
+        db[keyword] = jobs
+    return render_template('search.html', keyword=keyword, jobs=jobs)
+
+
+@app.route("/export")
+def export():
+    keyword = request.args.get("keyword")
+    if keyword == None or keyword.strip() == '':
+        return redirect("/")
+    if keyword not in db:
+        return redirect(f"/search?keyword={keyword}")
+    # save to file
+    save_to_file(keyword, db[keyword])
+    return send_file(f"{keyword}.csv", as_attachment=True)
+
+
+app.run("127.0.0.1", port=8000)

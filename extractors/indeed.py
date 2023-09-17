@@ -10,6 +10,9 @@ from selenium.webdriver.chrome.options import Options
 options = Options()
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
+options.add_argument("--window-size =0,0")
+
+# options.headless = True  # jake added
 
 
 def extract_indeed_jobs(keyword):  # search jobs in one page
@@ -20,9 +23,11 @@ def extract_indeed_jobs(keyword):  # search jobs in one page
         # broswer = webdriver.Chrome(options=options)
         browser = webdriver.Chrome(
             '/Users/ohchanghyun/Desktop/nomad_coder/web_scrapper/chromedriver', options=options)
+        browser.minimize_window()
 
         url = f"https://kr.indeed.com/jobs?q={keyword}&start={page*10}"
         print(f"Requesting {url}")
+
         browser.get(url=url)
 
         # use soup
@@ -30,6 +35,8 @@ def extract_indeed_jobs(keyword):  # search jobs in one page
         job_list = soup.find("ul", class_="css-zu9cdh eu4oa1w0")
         # make soup find only depth-one 'li' s
         jobs = job_list.find_all("li", recursive=False)
+        if jobs == None:  # jake added
+            return []
         for job in jobs:
             zone = job.find("div", class_='mosaic-zone nonJobContent-desktop')
             if zone is None:
@@ -61,6 +68,7 @@ def get_page_count(keyword):
     browser = webdriver.Chrome(
         '/Users/ohchanghyun/Desktop/nomad_coder/web_scrapper/chromedriver', options=options)
     url = f"https://kr.indeed.com/jobs?q={keyword}&limit=50"
+    browser.minimize_window()
 
     browser.get(url=url)
     soup = BeautifulSoup(browser.page_source, "html.parser")

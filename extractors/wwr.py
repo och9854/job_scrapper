@@ -36,4 +36,4 @@ def extract_wwr_jobs(keyword) -> list:
         return result
 
 
-extract_wwr_jobs('python')
+# print(extract_wwr_jobs('python'))
